@@ -1,0 +1,24 @@
+services:
+  # Название сервиса
+  moderation:
+    build:
+      context: . # папка в которой работаем
+      dockerfile: Dockerfile # имя докер-файла
+    ports:
+      - "8000:8000" # проброс порта наружу
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    depends_on:
+      redis:
+        condition: service_healthy # ждать, пока Redis не станет healthy
+    restart: unless-stopped
+
+  # Сервис Redis
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"] # проверка живучести
+      interval: 5s
+      timeout: 3s
+      retries: 5

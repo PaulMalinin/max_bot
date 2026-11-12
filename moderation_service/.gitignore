@@ -1,0 +1,9 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Moderation service
+moderation_service/.env
+moderation_service/models/   # если будешь скачивать веса моделей

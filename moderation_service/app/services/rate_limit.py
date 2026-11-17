@@ -15,8 +15,8 @@ async def request_is_limited(r: redis.Redis, user_id: int, limit: int, period: t
     period_in_seconds = int(period.total_seconds())
     t = (await r.time())[0]
     separation = max(round(period_in_seconds / limit), 1)
-    await r.setnx(key, 0)
-    tat = max(int(await r.get(key)), t)
+    await r.setnx(key, 0) # set if not exists
+    tat = max(int(await r.get(key)), t) # theoretical Arrival Time
 
     if tat - t <= period_in_seconds - separation:
 

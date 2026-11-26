@@ -1,4 +1,5 @@
 import logging
+import time
 import io
 
 from fastapi import FastAPI, UploadFile, File, HTTPException, Header
@@ -6,15 +7,17 @@ from fastapi.concurrency import run_in_threadpool
 from datetime import timedelta
 from PIL import Image
 
-from app.services.rate_limit import request_is_limited, redis_client
-from app.services.nsfw import is_nsfw, NSFW_THRESHOLD
+from app.db.redis import redis_client
+from app.services.nsfw import is_nsfw
+from app.services.duplicate import compute, check_dublicate
+from app.services.rate_limit import request_is_limited
 
 app = FastAPI(title = "Moderation service", version = "0.1.0")
 
 logger = logging.getLogger(__name__)
 
-RATE_LIMIT = 5
-RATE_PERIOD = timedelta(minutes=1)
+RATE_LIMIT = 10
+RATE_PERIOD = timedelta(minutes=10)
 
 MAX_SIZE = 15*1024*1024 # максимальный размер в байтах для фотографии
 
@@ -49,12 +52,20 @@ async def moderate_image(file: UploadFile = File(...), user_id: int | None = Hea
         logger.exception("Unknown error: %s", e)
         raise HTTPException(status_code=500, detail="Internal server error.")
 
-
     if await run_in_threadpool(is_nsfw, image):
         raise HTTPException(
             status_code=422,
-            detail=f"Image rejected: NSFW content detected (threshold: {NSFW_THRESHOLD})"
+            detail=f"Image rejected: NSFW content detected"
         )
+
+    new_hash = compute(image)
+
+    if await check_dublicate(redis_client, user_id, new_hash):
+        raise HTTPException(status_code=409, detail="Duplicate image detected")
+
+    entry = f"{int(time.time())}:{new_hash}"
+    await redis_client.lpush(f"phash:{user_id}", entry)
+    await redis_client.ltrim(f"phash:{user_id}", 0, 9)   
 
     return {
         "filename": file.filename or "unknown",

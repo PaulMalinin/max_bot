@@ -1,9 +1,50 @@
 # Python
 __pycache__/
 *.py[cod]
+*$py.class
 .venv/
 venv/
+env/
+.venv*/
+
+# Тесты и покрытие
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.mypy_cache/
+.ruff_cache/
 
 # Moderation service
 moderation_service/.env
-moderation_service/models/   # если будешь скачивать веса моделей
+moderation_service/.env.*
+!moderation_service/.env.example
+moderation_service/models/
+moderation_service/test_files/
+moderation_service/*.log
+
+# Тестовые артефакты (картинки, созданные в тестах)
+test_files/
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.webp
+
+# Docker
+*.pid
+docker-compose.override.yml
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Логи
+*.log
+logs/

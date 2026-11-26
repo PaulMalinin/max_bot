@@ -3,11 +3,6 @@ import os
 
 from datetime import timedelta
 
-redis_host = os.getenv("REDIS_HOST", "localhost")
-redis_port = int(os.getenv("REDIS_PORT", "6379"))
-
-redis_client = redis.Redis(host = redis_host, port = redis_port, db=0)
-
 async def request_is_limited(r: redis.Redis, user_id: int, limit: int, period: timedelta):
 
     key = f"rate:{user_id}"

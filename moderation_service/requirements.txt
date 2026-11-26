@@ -4,3 +4,4 @@ python-multipart
 Pillow
 redis
 opennsfw-onnx
+ImageHash

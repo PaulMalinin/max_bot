@@ -16,12 +16,12 @@ htmlcov/
 .ruff_cache/
 
 # Moderation service
-moderation_service/.env
-moderation_service/.env.*
-!moderation_service/.env.example
-moderation_service/models/
-moderation_service/test_files/
-moderation_service/*.log
+image_service/.env
+image_service/.env.*
+!image_service/.env.example
+image_service/models/
+image_service/test_files/
+image_service/*.log
 
 # Тестовые артефакты (картинки, созданные в тестах)
 test_files/

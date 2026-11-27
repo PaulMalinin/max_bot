@@ -11,6 +11,7 @@ from app.db.redis import redis_client
 from app.services.nsfw import is_nsfw
 from app.services.duplicate import compute, check_dublicate
 from app.services.rate_limit import request_is_limited
+from app.services.tagger import tagger_service
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -40,6 +41,7 @@ async def moderate_image(file: UploadFile = File(...), user_id: int | None = Hea
 
     if len(content) > MAX_SIZE:
         raise HTTPException(status_code=413, detail=f"The file size is too large. The maximum file size is {MAX_SIZE // (1024 * 1024)} MB.")
+
     try:
         image = Image.open(io.BytesIO(content))
         image.load()
@@ -63,13 +65,17 @@ async def moderate_image(file: UploadFile = File(...), user_id: int | None = Hea
         raise HTTPException(status_code=409, detail="Duplicate image detected")
 
     entry = f"{int(time.time())}:{new_hash}"
+
     await redis_client.lpush(f"phash:{user_id}", entry)
     await redis_client.ltrim(f"phash:{user_id}", 0, 9)   
+
+    tags = await run_in_threadpool(tagger_service.tag_image, image)
 
     return {
         "filename": file.filename or "unknown",
         "format": image.format,
         "width": image.width,
         "height": image.height,
-        "bytes": len(content)
+        "bytes": len(content),
+        "tags": tags,
     }   

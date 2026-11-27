@@ -1,24 +1,33 @@
 services:
-  # Название сервиса
   moderation:
     build:
-      context: . # папка в которой работаем
-      dockerfile: Dockerfile # имя докер-файла
+      context: .
+      dockerfile: Dockerfile
+    command: python -m uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     ports:
-      - "8000:8000" # проброс порта наружу
+      - "8000:8000"
     environment:
       - REDIS_HOST=redis
       - REDIS_PORT=6379
+      - HF_HUB_ENABLE_HF_TRANSFER=1
     depends_on:
       redis:
-        condition: service_healthy # ждать, пока Redis не станет healthy
+        condition: service_healthy
+    volumes:
+      - ./app:/app/app
+      - hf-cache:/root/.cache/huggingface
     restart: unless-stopped
 
-  # Сервис Redis
   redis:
     image: redis:7-alpine
     healthcheck:
-      test: ["CMD", "redis-cli", "ping"] # проверка живучести
+      test: ["CMD", "redis-cli", "ping"]
       interval: 5s
       timeout: 3s
       retries: 5
+    volumes:
+      - redis-data:/data
+
+volumes:
+  hf-cache:
+  redis-data:
